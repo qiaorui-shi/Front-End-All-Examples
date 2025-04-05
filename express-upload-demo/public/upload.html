@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <input type="file" id="uploadRef" />
+    <button onclick="handleUpload()">上传</button>
+
+    <script>
+      const uploadForm = document.querySelector("#uploadRef");
+      function handleUpload() {
+        const formData = new FormData();
+        formData.append("file1", uploadForm.files[0]);
+        formData.append('file2', uploadForm.files[0]);
+
+        fetch("http://127.0.0.1:3000/upload/upload2", {
+          method: "post",
+          body: formData
+        }).then((res) => {});
+      }
+    </script>
+  </body>
+</html>

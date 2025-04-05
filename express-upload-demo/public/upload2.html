@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <input type="file" id="uploadRef" />
+    <button onclick="handleUpload()">上传</button>
+    <button onclick="mergeChunkRequest()">合并</button>
+
+    <script src="./javascripts/saprk-md5.min.js"></script>
+    <script>
+      const uploadForm = document.querySelector("#uploadRef");
+
+      //file文件， chunkFileSize分片文件大小
+      function createChunks(file, chunkFileSize = 1024 * 1024) {
+        let startIndex = 0;
+        const chunks = [];
+        while (startIndex < file.size) {
+          chunks.push(file.slice(startIndex, startIndex + chunkFileSize));
+          startIndex += chunkFileSize;
+        }
+
+        // 计算每个分片的 Hash
+        return Promise.all(
+          chunks.map(async (chunk) => {
+            return {
+              chunkHash: await calculateHash(chunk),
+              chunk
+            };
+          })
+        );
+      }
+
+      //计算文件的hash值
+      function calculateHash(file) {
+        return new Promise((resolve, reject) => {
+          const fileReader = new FileReader();
+          fileReader.readAsArrayBuffer(file);
+          fileReader.onload = function (e) {
+            if (!e.target?.result) {
+              reject(new Error("文件读取失败"));
+              return;
+            }
+            const spark = new SparkMD5.ArrayBuffer();
+            spark.append(e.target.result);
+            resolve(spark.end());
+          };
+          fileReader.onerror = function () {
+            reject(new Error("文件读取失败"));
+          };
+        });
+      }
+
+      async function handleUpload() {
+        const file = uploadForm.files[0];
+        // 计算完整文件的hash
+        const fileHash = await calculateHash(file);
+        // 获取文件切片和对应的hash值
+        const chunksFile = await createChunks(file);
+        // 组装切片对应的表单数据
+        const fileData = chunksFile.map((item, index) => {
+          const formData = new FormData();
+          formData.append("fileHash", fileHash);
+          formData.append("chunkHash", item.chunkHash + "-" + index);
+          formData.append("chunk", item.chunk);
+          console.log("🚀 ~ fileData ~ formData:", formData);
+          return formData;
+        });
+
+        // 生成所有请求函数
+        const taskPool = fileData.map(
+          (formData) => () =>
+            fetch("http://localhost:3000/upload2/upload", {
+              method: "POST",
+              body: formData
+            })
+        );
+        // 控制请求并发数量
+        await concurRequest(taskPool, 6);
+        mergeChunkRequest(fileHash);
+      }
+
+      // 上传完成后进行合并操作
+      function mergeChunkRequest(fileHash) {
+        const params = {
+          fileHash: "da91cb40ca5019af5a75ec96b606ba9f",
+          fileName: "da91cb40ca5019af5a75ec96b606ba9f"
+        };
+        fetch("http://localhost:3000/upload2/mergeChunk", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(params)
+        }).then((res) => {});
+      }
+
+      // 控制请求并发
+      function concurRequest(taskPool, max) {
+        return new Promise((resolve) => {
+          if (taskPool.length === 0) {
+            resolve([]);
+            return;
+          }
+          const results = [];
+          let index = 0;
+          let count = 0;
+          const request = async () => {
+            if (index === taskPool.length) return;
+            const i = index;
+            const task = taskPool[index];
+            index++;
+            try {
+              results[i] = await task();
+            } catch (err) {
+              results[i] = err;
+            } finally {
+              count++;
+              if (count === taskPool.length) {
+                resolve(results);
+              }
+              request();
+            }
+          };
+          const times = Math.min(max, taskPool.length);
+          for (let i = 0; i < times; i++) {
+            request();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
