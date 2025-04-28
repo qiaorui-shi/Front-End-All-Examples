@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <button onclick="sendRequests()">发送100个请求</button>
+    <div id="result"></div>
+
+    <script>
+      function sendRequests() {
+        const urls = Array.from({ length: 100 }, (_, i) => `https://jsonplaceholder.typicode.com/posts/${i + 1}`);
+        queue(urls, 5)
+          .then((results) => {
+            document.getElementById("result").textContent = "所有请求完成！结果请看控制台";
+            console.log(results);
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      }
+
+      function queue(urlList, maxNum) {
+        const result = []; //存放结果数组
+        let index = 0; //存放当前处理的索引
+        let count = 0; //当前完成的请求数量
+
+        return new Promise((reslove, reject) => {
+          const next = () => {
+            if (index >= urlList.length) return;
+            const url = urlList[index]; //取出当前的url
+            index++;
+            fetch(url)
+              .then((res) => {
+                result[index] = res; //将结果存入结果数组中
+              })
+              .catch((err) => {
+                result[index] = err; //将结果存入结果数组中
+              })
+              .finally(() => {
+                count++; //请求完成，计数器+1
+                if (count < urlList.length) {
+                  next(); //递归
+                } else {
+                  reslove(result);
+                }
+              });
+          };
+
+          // 最初并发数
+          const minNum = Math.min(maxNum, urlList.length);
+          for (let i = 0; i < minNum; i++) {
+            next();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

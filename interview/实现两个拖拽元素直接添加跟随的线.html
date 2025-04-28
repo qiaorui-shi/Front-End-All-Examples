@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      [draggable] {
+        cursor: move;
+        position: absolute;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <svg id="svg-container" width="500" height="500"></svg>
+      <div id="element1" draggable="true" style="width: 50px; height: 50px; background-color: skyblue"></div>
+      <div id="element2" draggable="true" style="width: 50px; height: 50px; background-color: skyblue"></div>
+    </div>
+    <script>
+      const svgContainer = document.getElementById("svg-container");
+      const element1 = document.getElementById("element1");
+      const element2 = document.getElementById("element2");
+
+      // 创建SVG连线元素（修正stroke-width属性名）
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("stroke", "black");
+      line.setAttribute("stroke-width", "2");
+      svgContainer.appendChild(line);
+
+      // 初始化连线位置
+      const updateLinePosition = () => {
+        const rect1 = element1.getBoundingClientRect();
+        const rect2 = element2.getBoundingClientRect();
+
+        line.setAttribute("x1", rect1.left + rect1.width / 2);
+        line.setAttribute("y1", rect1.top + rect1.height / 2);
+        line.setAttribute("x2", rect2.left + rect2.width / 2);
+        line.setAttribute("y2", rect2.top + rect2.height / 2);
+      };
+      updateLinePosition();
+
+      // 拖拽处理函数
+      const setupDrag = (element) => {
+        let isDragging = false;
+        let startX, startY;
+
+        element.addEventListener("mousedown", (e) => {
+          isDragging = true;
+          startX = e.clientX - element.offsetLeft;
+          startY = e.clientY - element.offsetTop;
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (!isDragging) return;
+
+          element.style.left = `${e.clientX - startX}px`;
+          element.style.top = `${e.clientY - startY}px`;
+          updateLinePosition();
+        });
+
+        document.addEventListener("mouseup", () => {
+          isDragging = false;
+        });
+      };
+
+      // 为两个元素添加拖拽功能
+      setupDrag(element1);
+      setupDrag(element2);
+    </script>
+  </body>
+</html>
