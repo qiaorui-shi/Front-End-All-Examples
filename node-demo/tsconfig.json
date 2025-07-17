@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "outDir": "dist",
+    "target": "es6",
+    "module": "esnext",
+  },
+  "include": ["src/**/*", "main.ts"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
+}

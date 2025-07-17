@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      const a = new Reflect(); // x错误：Reflect不是一个构造函数，不能使用new关键字
+      console.log("🚀 ~ a:", a); // reflect.html:10 Uncaught TypeError: Reflect is not a constructor
+
+      // Reflect是一个内置的对象, 它提供了一些方法来操作对象的方法和属性
+      // Q:对象已经有对应的方法了，为什么还需要Reflect？
+      // A:Reflect提供的操作对象和属性的方法保持了返回值的统一
+    </script>
+  </body>
+</html>

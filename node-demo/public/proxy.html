@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      // 1. proxy如何对对象进行拦截的，核心原理是通过递归代理和延迟代理(惰性代理)相结合，确保每一层的属性访问都能被拦截
+      // 2. 正常proxy只代理第一层，当访问到下面list的时候发现list是一个对象，就会对list进行代理，这就是延迟（惰性）代理
+      // 3. 相比于Object.defineProperty，Proxy不需要递归代理所有属性，性能提高了
+      // 4. proxy在不传递handler中的方法情况下,V8引擎会自动使用默认的行为,该默认行为等同于Reflect.get(target, prop, receiver)
+      const a = new Proxy(
+        {
+          name: "张三",
+          age: "28",
+          list: [
+            { childName: "小明", age: "8" },
+            { childName: "小红", age: "6" }
+          ]
+        },
+        {
+          get(target, prop, receiver) {
+            console.log("🚀 ~ get ~ target, prop:", target, prop, receiver);
+            // 错误方式：直接返回 target[prop] 会丢失 this 绑定
+            // return target[prop];
+            // 正确方式：使用 Reflect.get 传递 receiver
+            return Reflect.get(target, prop, receiver);
+          },
+          set(target, prop, value) {
+            console.log("🚀 ~ target, prop, value:", target, prop, value);
+            return (target[prop] = value);
+          },
+          has(taget, prop, value) {
+            console.log("🚀 ~ has ~ taget, prop, value:", taget, prop, value);
+            return prop in taget;
+          },
+          deleteProperty(target, prop) {
+            console.log("🚀 ~ deleteProperty ~ target, prop:", target, prop);
+            return delete target[prop];
+          }
+        }
+      );
+      a.list[0].childName = "小yang";
+      console.log(111, a.list[0].childName);
+    </script>
+  </body>
+</html>

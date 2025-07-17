@@ -1,0 +1,19 @@
+{
+  "name": "demo",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "test": "tsc && node ./dist/main.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@types/reflect-metadata": "^0.0.5",
+    "reflect-metadata": "^0.2.2"
+  }
+}
